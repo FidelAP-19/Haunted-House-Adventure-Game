@@ -1,5 +1,7 @@
 # 👻 Haunted House Adventure
 
+🎮 **[Play the Live Demo here!](https://fidelap-19.github.io/Haunted-House-Adventure-Game/)**
+
 A haunted-house "Choose Your Own Adventure" game with both:
 - a Node.js CLI version
 - a browser GUI version (vanilla HTML/CSS/JS)
