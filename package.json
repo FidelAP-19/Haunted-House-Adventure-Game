@@ -4,10 +4,16 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  "keywords": [
+    "mlh",
+    "global-hack-week",
+    "github-copilot",
+    "adventure-game"
+  ],
+  "author": "Fidel Perez",
+  "license": "MIT",
+  "description": "A choose-your-own-adventure game built with GitHub Copilot for MLH Global Hack Week."
 }
