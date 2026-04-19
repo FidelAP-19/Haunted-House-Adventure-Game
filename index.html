@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Haunted House Adventure</title>
+    <style>
+      :root {
+        --bg: #0f0a14;
+        --panel: #1a1222;
+        --text: #f4edf8;
+        --muted: #bcaed0;
+        --accent: #ff8a1f;
+        --accent-2: #ffb347;
+        --danger: #ff4d4d;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        color: var(--text);
+        background: radial-gradient(circle at 20% 10%, #2a1838 0%, var(--bg) 55%);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .game {
+        width: min(780px, 100%);
+        background: linear-gradient(180deg, #24162f 0%, #17101f 100%);
+        border: 1px solid #3a274d;
+        border-radius: 14px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+        overflow: hidden;
+      }
+
+      .header {
+        padding: 18px 22px;
+        border-bottom: 1px solid #322046;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .title {
+        margin: 0;
+        font-size: 1.2rem;
+        letter-spacing: 0.4px;
+      }
+
+      .health-wrap {
+        min-width: 180px;
+        text-align: right;
+      }
+
+      .health-label {
+        margin: 0 0 6px;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+
+      .health-bar {
+        width: 100%;
+        height: 11px;
+        border-radius: 999px;
+        background: #332540;
+        border: 1px solid #4a355f;
+        overflow: hidden;
+      }
+
+      .health-fill {
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        transition: width 180ms ease;
+      }
+
+      .content {
+        padding: 24px 22px 26px;
+      }
+
+      .scene {
+        margin: 0 0 20px;
+        line-height: 1.65;
+        color: #f1e8f7;
+        min-height: 84px;
+      }
+
+      .choices {
+        display: grid;
+        gap: 10px;
+      }
+
+      .choice-btn {
+        appearance: none;
+        width: 100%;
+        border: 1px solid #5e3f7e;
+        background: #241835;
+        color: var(--text);
+        border-radius: 10px;
+        padding: 12px 14px;
+        text-align: left;
+        cursor: pointer;
+        font-size: 0.98rem;
+        transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+      }
+
+      .choice-btn:hover {
+        transform: translateY(-1px);
+        border-color: var(--accent);
+        background: #2d1d41;
+      }
+
+      .end-screen {
+        border: 1px solid #5b3f75;
+        background: #1f152b;
+        border-radius: 10px;
+        padding: 16px;
+      }
+
+      .end-title {
+        margin: 0 0 8px;
+        font-size: 1.15rem;
+      }
+
+      .win {
+        color: var(--accent-2);
+      }
+
+      .lose {
+        color: var(--danger);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="game">
+      <header class="header">
+        <h1 class="title">👻 Haunted House Adventure</h1>
+        <div class="health-wrap">
+          <p class="health-label">Health: <span id="healthText">100</span>/100</p>
+          <div class="health-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <div id="healthFill" class="health-fill"></div>
+          </div>
+        </div>
+      </header>
+      <section class="content">
+        <div id="sceneText" class="scene"></div>
+        <div id="choices" class="choices"></div>
+      </section>
+    </main>
+
+    <script type="module">
+      import scenes from "./scenes.js";
+      import Player from "./player.js";
+
+      const player = new Player("Explorer");
+      let currentSceneId = "entrance";
+
+      const sceneText = document.getElementById("sceneText");
+      const choicesEl = document.getElementById("choices");
+      const healthText = document.getElementById("healthText");
+      const healthFill = document.getElementById("healthFill");
+      const progressbar = document.querySelector('[role="progressbar"]');
+
+      function updateHealth() {
+        const safeHealth = Math.max(0, Math.min(100, player.health));
+        healthText.textContent = String(safeHealth);
+        healthFill.style.width = `${safeHealth}%`;
+        progressbar.setAttribute("aria-valuenow", String(safeHealth));
+      }
+
+      function renderEndScreen(isWin, message) {
+        const endClass = isWin ? "win" : "lose";
+        const endTitle = isWin ? "You Escaped!" : "You Were Claimed by the House";
+        choicesEl.innerHTML = `
+          <div class="end-screen">
+            <h2 class="end-title ${endClass}">${endTitle}</h2>
+            <p>${message}</p>
+            <button id="restartBtn" class="choice-btn">Play Again</button>
+          </div>
+        `;
+        document.getElementById("restartBtn").addEventListener("click", () => {
+          player.health = 100;
+          currentSceneId = "entrance";
+          renderScene();
+        });
+      }
+
+      function renderScene() {
+        const scene = scenes[currentSceneId];
+        sceneText.textContent = scene.description;
+        updateHealth();
+
+        if (scene.id === "escape") {
+          renderEndScreen(true, "The gate slams behind you and dawn begins to break.");
+          return;
+        }
+
+        if (scene.id === "death") {
+          player.takeDamage(100);
+          updateHealth();
+          renderEndScreen(false, "Cold silence closes in as the mansion keeps your name.");
+          return;
+        }
+
+        choicesEl.innerHTML = "";
+        scene.choices.forEach((choice) => {
+          const button = document.createElement("button");
+          button.className = "choice-btn";
+          button.textContent = choice.text;
+          button.addEventListener("click", () => {
+            currentSceneId = choice.nextScene;
+            renderScene();
+          });
+          choicesEl.appendChild(button);
+        });
+      }
+
+      renderScene();
+    </script>
+  </body>
+</html>
